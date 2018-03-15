@@ -1,6 +1,13 @@
 package de.virtual7.reactivelab.basics;
 
 import org.junit.Test;
+import reactor.core.publisher.Flux;
+
+import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
+import java.util.stream.Stream;
+
+import static java.util.Arrays.asList;
 
 /**
  * Created by mihai.dobrescu
@@ -9,52 +16,77 @@ public class FluxTests {
 
     @Test
     public void testCreateFluxJust() {
-        //TODO: create a Flux using Flux.just
+        Flux.just("abc").subscribe(System.out::println);
     }
 
     @Test
     public void testCreateFluxFromList() {
-        //TODO: create a Flux from a List
+        Flux.just(asList("a", "b", "c")).subscribe(System.out::println);
+        Flux.fromIterable(asList("a", "b", "c")).subscribe(System.out::println);
     }
 
     @Test
     public void testFluxCountElements() {
-        //TODO: count the elements from a flux
+        Flux<String> stringFlux = Flux.fromIterable(asList("a", "b", "c"));
+        stringFlux.count().subscribe(System.out::println);
+        stringFlux.subscribe(System.out::println);
     }
 
     @Test
     public void testFluxRange() {
-        //TODO: create a Flux using the .range operator. Possible usecases?
+        Flux.range(5, 8).subscribe(System.out::println);
     }
 
     @Test
     public void testCreateFluxUsingGenerate() throws InterruptedException {
-        //TODO: create a Flux using Flux.generate()
+        Flux.generate(
+                () -> 0,
+                (state, sink) -> {
+                    sink.next("3 x " + state + " = " + 3 * state);
+                    if (state == 10) sink.complete();
+                    return state + 1;
+                }).subscribe(System.out::println);
+
+        Flux.generate(sink -> sink.next("5"))
+                .take(2)
+                .subscribe(System.out::println);
+
     }
 
     @Test
     public void testCreateFluxUsingInterval() throws InterruptedException {
-        //TODO: create a Flux using Flux.interval()
+        CountDownLatch cdl = new CountDownLatch(1);
+
+        Flux.interval(Duration.ofSeconds(1))
+                .take(2)
+                .doOnComplete(cdl::countDown)
+                .subscribe(value -> System.out.println(value));
+
+        cdl.await();
     }
 
     @Test
     public void testCreateFluxFromStream() {
-        //TODO: create a Flux using Flux.fromStream()
+        Flux.fromStream(Stream.of(5, 3, 3)).subscribe(System.out::println);
     }
 
     @Test
     public void testZipThem() throws InterruptedException {
-        //TODO: create two Flux instances, one using fromStream() one using .interval with the duration of a second
-        //zip them and observe the results
+        Flux.fromStream(Stream.of(5, 3, 3))
+                .zipWith(Flux.interval(Duration.ofSeconds(1)))
+                .subscribe(System.out::println);
+        Thread.sleep(5000);
     }
 
     @Test
     public void testSwitchIfEmpty() {
-        //TODO: create a Flux instance of your choice and make sure it's empty. Call the switchIfEmpty method on it to supply a fallback
+        Flux.empty().switchIfEmpty(Flux.fromIterable(asList("a", "b"))).subscribe(System.out::println);
     }
 
     @Test
     public void testHandleAndSkipNulls() {
+        Flux.just("a", "b", null, "c");
+
         //TODO: create a Flux using just and for each value call a method which could return a null
         //use handle() to filter out the nulls
     }
@@ -62,6 +94,10 @@ public class FluxTests {
     @Test
     public void testFluxOnErrorResume() throws InterruptedException {
         //TODO: generate a Flux using range and then throw an exception for one of the elements. Use onErrorResume as fallback
+    }
+
+    private Integer returnNullOrFive() {
+        return Math.random() < 0.5 ? null : Integer.valueOf(5);
     }
 
 }

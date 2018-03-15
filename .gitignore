@@ -3,6 +3,7 @@
 .DS_Store
 target/
 classes/
+tools/
 temp/
 logs/
 *.log

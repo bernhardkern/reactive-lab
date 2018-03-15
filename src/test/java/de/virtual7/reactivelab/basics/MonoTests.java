@@ -3,9 +3,11 @@ package de.virtual7.reactivelab.basics;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by mihai.dobrescu
@@ -14,36 +16,49 @@ public class MonoTests {
 
     @Test
     public void testCreateVoidMono() {
-        //TODO: create an empty Mono
+        Mono<Object> emptyMono = Mono.empty();
+        emptyMono.log().subscribe(System.out::println);
     }
 
     @Test
     public void testCreateScalarMono() {
-        //TODO: create a Mono with the "Hello World" value
+        Mono<String> mono = Mono.just("hello");
+        mono.log().subscribe(System.out::println);
     }
 
     @Test
     public void testFlatMapMono() {
-        //TODO: create a Mono with the "Hello" value and append "World" to it using the flatMap operator
+        Mono<String> mono = Mono.just("Hello");
+        mono.map(string -> string + ", World").subscribe(System.out::println);
     }
 
     @Test
     public void testCreateFluxFromMono() {
-        //TODO: Create a Mono from a List and then convert it to a Flux
+        List<String> strings = Arrays.asList("" +
+                "a", "b", "c");
+        Mono<List<String>> stringsMono = Mono.just(strings);
+        Flux<String> stringFlux = stringsMono.flatMapMany(Flux::fromIterable);
+        stringFlux.log().subscribe(System.out::println);
     }
 
     @Test
     public void testMergeMonos() {
-        //TODO: Create two Mono instances and merge them, what do you get ?
+        Flux<String> mergedMono = Mono.just("Hello").mergeWith(Mono.just(", World"));
+        mergedMono.subscribe(System.out::println);
     }
 
     @Test
     public void testZipMonos() {
-        //TODO: Create two Mono instances and zip them
+        Mono<Tuple2<String, String>> zippedMono = Mono.just("bla").zipWith(Mono.just("blubb"));
+        Mono<Tuple2<Tuple2<String, String>, String>> superZippedMono = zippedMono.zipWith(Mono.just("def"));
+        superZippedMono.subscribe(t -> System.out.println(t.getT1().getT1()));
     }
 
     @Test
     public void testBlockingMono() {
-        //TODO: Create a Mono instance and convert it to a blocking call
+        String blocked = Mono.just("value").block(Duration.ZERO);
+        System.out.println(blocked);
     }
+
+
 }
